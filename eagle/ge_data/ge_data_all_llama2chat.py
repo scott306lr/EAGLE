@@ -167,7 +167,7 @@ quantization_config = BitsAndBytesConfig(
 # bigmodel = AutoModelForCausalLM.from_pretrained(bigname, load_in_4bit=True, device_map={"": 0}, )
 # smallmodel = AutoModelForCausalLM.from_pretrained(smallname, load_in_4bit=True, device_map={"": 1}, )
 # bigmodel = AutoModelForCausalLM.from_pretrained(bigname, device_map="auto",torch_dtype=torch.float16)
-bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto",load_in_8bit=True, quantization_config=quantization_config)
+bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto", quantization_config=quantization_config)
 bigmodel.eval()
 
 
