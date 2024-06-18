@@ -55,7 +55,11 @@ for i in range(num_p):
     gpu_index = gpus[i]
     gpu_index_str = ' '.join(map(str, gpu_index))
     # gpu_index_str='['+gpu_index_str+']'
-    command = "python ge_data_all_vicuna.py --start={} --end={} --index={} --gpu_index {} --outdir {}".format(start, end, index,
+
+    # combine directory with ge_data_all_vicuna.py
+    parent_directory = os.path.dirname(os.path.realpath(__file__))
+    exec_dir = os.path.join(parent_directory, 'ge_data_all_llama2chat.py')
+    command = "python {} --start={} --end={} --index={} --gpu_index {} --outdir {}".format(exec_dir, start, end, index,
                                                                                                 gpu_index_str, outdir)
     commands.append(command)
 # run_command(commands[0])

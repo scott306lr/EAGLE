@@ -10,7 +10,7 @@ parser.add_argument('--outdir', type=str, default='outdir0')
 args = parser.parse_args()
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_index)[1:-1]
+# os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_index)#[1:-1]
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -19,10 +19,10 @@ from datasets import load_dataset
 import json
 from fastchat.model.model_adapter import get_conversation_template
 
-bigname="/home/hongyanz/scratch/weights/llama2chat/13B"
-# bigname = "/home/lyh/weights/hf/llama/7B/"
+bigname="meta-llama/Llama-2-7b-chat-hf"
 # smallname = "/home/lyh/weights/hf/llama/7B/"
 
+dataset_dir = "Aeala/ShareGPT_Vicuna_unfiltered"
 
 
 def longest_common_prefix(list1, list2):
@@ -43,7 +43,8 @@ def build_dataset_rank(
         tokenizer, split="train",
         select=None,
 ):
-    ds = load_dataset('json', data_files="/home/hongyanz/scratch/data/ShareGPT_V4.3_unfiltered_cleaned_split.json")
+    # ds = load_dataset('json', data_files=data_dir)
+    ds = load_dataset(dataset_dir)
     ds = ds['train']
     ds = ds.shuffle(seed=42)
     ds1 = ds.select(range(args.start, args.end))
@@ -157,16 +158,16 @@ def build_dataset_rank(
 bigtokenizer = AutoTokenizer.from_pretrained(bigname,use_fast=False)
 ds = build_dataset_rank(bigtokenizer)
 print(ds)
-# quantization_config = BitsAndBytesConfig(
-#         load_in_4bit=True,
-#         bnb_4bit_compute_dtype=torch.bfloat16,
-#         bnb_4bit_use_double_quant=True,
-#         bnb_4bit_quant_type="nf4",
-#     )
+quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+    )
 # bigmodel = AutoModelForCausalLM.from_pretrained(bigname, load_in_4bit=True, device_map={"": 0}, )
 # smallmodel = AutoModelForCausalLM.from_pretrained(smallname, load_in_4bit=True, device_map={"": 1}, )
-bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto",torch_dtype=torch.float16)
-#bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto",load_in_8bit=True)
+# bigmodel = AutoModelForCausalLM.from_pretrained(bigname, device_map="auto",torch_dtype=torch.float16)
+bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto",load_in_8bit=True, quantization_config=quantization_config)
 bigmodel.eval()
 
 
