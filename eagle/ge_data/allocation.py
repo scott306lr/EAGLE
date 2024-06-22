@@ -13,9 +13,11 @@ e = 68000 - 1
 #e = 68 - 1
 #gpus = [[0],[1],[2],[3],[4],[5],[6],[7]]
 
-gpus=[[0],[1],[2],[3]]
+gpus=[[0, 1, 2, 3]]
 num_p = len(gpus)
-outdir = '{}/sharegpt_{}_{}_mufp16'.format(args.outdir,s,e)
+# outdir = '{}/sharegpt_{}_{}_mufp16'.format(args.outdir,s,e)
+# use os.path.join to combine directory
+outdir = os.path.join(args.outdir, 'sharegpt_{}_{}_mufp16'.format(s, e))
 
 
 def split_range(start, end, n, over=False):

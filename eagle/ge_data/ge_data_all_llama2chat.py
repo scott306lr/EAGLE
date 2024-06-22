@@ -1,16 +1,17 @@
 import argparse
 import copy
+from time import sleep
 
 parser = argparse.ArgumentParser(description='sp')
 parser.add_argument('--start', type=int, default=0)
 parser.add_argument('--end', type=int, default=100)
 parser.add_argument('--index', type=int, default=1)
-parser.add_argument('--gpu_index', type=int, nargs='+', default=[0])
+parser.add_argument('--gpu_index', type=int, nargs='+', default=[0, 1, 2])
 parser.add_argument('--outdir', type=str, default='outdir0')
 args = parser.parse_args()
 import os
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_index)#[1:-1]
+os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_index)[1:-1]
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -53,7 +54,7 @@ def build_dataset_rank(
     # ds2=ds.select(range(300,len(ds)))
     original_columns1 = ds1.column_names
     # original_columns2 = ds2.column_names
-    num_proc = 4
+    num_proc = 16#64#16#4
 
     def preprocess_function(examples):
         new_examples = {
@@ -158,16 +159,16 @@ def build_dataset_rank(
 bigtokenizer = AutoTokenizer.from_pretrained(bigname,use_fast=False)
 ds = build_dataset_rank(bigtokenizer)
 print(ds)
-quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-    )
+# quantization_config = BitsAndBytesConfig(
+#         load_in_4bit=True,
+#         bnb_4bit_compute_dtype=torch.bfloat16,
+#         bnb_4bit_use_double_quant=True,
+#         bnb_4bit_quant_type="nf4",
+#     )
 # bigmodel = AutoModelForCausalLM.from_pretrained(bigname, load_in_4bit=True, device_map={"": 0}, )
 # smallmodel = AutoModelForCausalLM.from_pretrained(smallname, load_in_4bit=True, device_map={"": 1}, )
 # bigmodel = AutoModelForCausalLM.from_pretrained(bigname, device_map="auto",torch_dtype=torch.float16)
-bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto", quantization_config=quantization_config)
+bigmodel = AutoModelForCausalLM.from_pretrained(bigname,  device_map="auto")
 bigmodel.eval()
 
 
@@ -191,7 +192,8 @@ def ge(data):
     td={"input_ids":input_ids.cpu()[0],"hidden_state":hidden_state_big.cpu()[0],"loss_mask":data["loss_mask"].cpu()[0]}
     return td
 
-outdir = f'{args.outdir}/{args.index}'
+# outdir = f'{args.outdir}/{args.index}'
+outdir = os.path.join(args.outdir, f"gpu{str(args.index)}")
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
